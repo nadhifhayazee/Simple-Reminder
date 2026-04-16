@@ -9,7 +9,8 @@ fun ReminderEntity.toDomain(): Reminder {
         id = id,
         name = name,
         deadline = deadline,
-        status = ReminderStatus.valueOf(status)
+        status = ReminderStatus.valueOf(status),
+        createdAt = createdAt
     )
 }
 
@@ -18,6 +19,7 @@ fun Reminder.toEntity(): ReminderEntity {
         id = id,
         name = name,
         deadline = deadline,
-        status = status.name
+        status = status.name,
+        createdAt = createdAt
     )
 }

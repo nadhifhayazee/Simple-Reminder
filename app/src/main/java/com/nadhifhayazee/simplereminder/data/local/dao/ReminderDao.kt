@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ReminderDao {
-    @Query("SELECT * FROM reminders ORDER BY deadline ASC")
+    @Query("SELECT * FROM reminders ORDER BY createdAt DESC")
     fun getReminders(): Flow<List<ReminderEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

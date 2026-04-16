@@ -8,5 +8,6 @@ data class Reminder(
     val id: Int = 0,
     val name: String,
     val deadline: Long, // timestamp
-    val status: ReminderStatus = ReminderStatus.TODO
+    val status: ReminderStatus = ReminderStatus.TODO,
+    val createdAt: Long = System.currentTimeMillis()
 )

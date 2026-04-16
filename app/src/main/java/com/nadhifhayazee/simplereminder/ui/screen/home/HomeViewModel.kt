@@ -6,6 +6,7 @@ import com.nadhifhayazee.simplereminder.domain.model.Reminder
 import com.nadhifhayazee.simplereminder.domain.model.ReminderStatus
 import com.nadhifhayazee.simplereminder.domain.notification.NotificationScheduler
 import com.nadhifhayazee.simplereminder.domain.usecase.AddReminderUseCase
+import com.nadhifhayazee.simplereminder.domain.usecase.DeleteReminderUseCase
 import com.nadhifhayazee.simplereminder.domain.usecase.GetRemindersUseCase
 import com.nadhifhayazee.simplereminder.domain.usecase.UpdateReminderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +19,7 @@ class HomeViewModel @Inject constructor(
     private val getRemindersUseCase: GetRemindersUseCase,
     private val addReminderUseCase: AddReminderUseCase,
     private val updateReminderUseCase: UpdateReminderUseCase,
+    private val deleteReminderUseCase: DeleteReminderUseCase,
     private val notificationScheduler: NotificationScheduler
 ) : ViewModel() {
 
@@ -72,9 +74,11 @@ class HomeViewModel @Inject constructor(
     private fun updateReminder(reminder: Reminder) {
         viewModelScope.launch {
             try {
-                updateReminderUseCase(reminder)
                 if (reminder.status == ReminderStatus.DONE) {
+                    deleteReminderUseCase(reminder)
                     notificationScheduler.cancelNotification(reminder)
+                } else {
+                    updateReminderUseCase(reminder)
                 }
             } catch (e: Exception) {
                 _effect.emit(HomeEffect.ShowError(e.message ?: "Failed to update reminder"))

@@ -9,5 +9,6 @@ data class ReminderEntity(
     val id: Int = 0,
     val name: String,
     val deadline: Long,
-    val status: String
+    val status: String,
+    val createdAt: Long
 )

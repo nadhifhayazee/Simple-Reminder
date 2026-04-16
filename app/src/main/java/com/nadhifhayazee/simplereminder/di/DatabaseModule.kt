@@ -21,7 +21,7 @@ object DatabaseModule {
             context,
             ReminderDatabase::class.java,
             "reminder_db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides
