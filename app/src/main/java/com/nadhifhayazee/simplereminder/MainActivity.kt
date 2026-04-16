@@ -1,21 +1,20 @@
 package com.nadhifhayazee.simplereminder
 
 import android.Manifest
-import android.os.Build
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import com.nadhifhayazee.simplereminder.ui.screen.home.HomeScreen
-import com.nadhifhayazee.simplereminder.ui.theme.SimpleReminderTheme
-import dagger.hilt.android.AndroidEntryPoint
-
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.Bundle
 import android.provider.Settings
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import com.nadhifhayazee.simplereminder.ui.navigation.ReminderNavGraph
+import com.nadhifhayazee.simplereminder.ui.theme.SimpleReminderTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -36,7 +35,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SimpleReminderTheme {
-                HomeScreen()
+                ReminderNavGraph()
             }
         }
     }

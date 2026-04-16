@@ -15,6 +15,7 @@ import com.nadhifhayazee.simplereminder.ui.screen.home.components.ReminderItem
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onEditReminder: (Int) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -62,7 +63,8 @@ fun HomeScreen(
                                         reminder.copy(status = newStatus)
                                     )
                                 )
-                            }
+                            },
+                            onClick = { onEditReminder(reminder.id) }
                         )
                     }
                 }

@@ -17,6 +17,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,10 +39,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderItem(
     reminder: Reminder,
-    onStatusChange: (ReminderStatus) -> Unit
+    onStatusChange: (ReminderStatus) -> Unit,
+    onClick: () -> Unit
 ) {
     val dateFormat = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
     val deadlineStr = dateFormat.format(Date(reminder.deadline))
@@ -51,6 +54,7 @@ fun ReminderItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
+        onClick = onClick,
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface

@@ -18,6 +18,10 @@ class ReminderRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getReminderById(id: Int): Reminder? {
+        return dao.getReminderById(id)?.toDomain()
+    }
+
     override suspend fun addReminder(reminder: Reminder): Long {
         return dao.insertReminder(reminder.toEntity())
     }
