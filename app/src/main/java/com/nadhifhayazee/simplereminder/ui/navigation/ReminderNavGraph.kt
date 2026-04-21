@@ -9,6 +9,8 @@ import androidx.navigation.navArgument
 import com.nadhifhayazee.simplereminder.ui.screen.edit.EditReminderScreen
 import com.nadhifhayazee.simplereminder.ui.screen.home.HomeScreen
 
+import androidx.navigation.NavHostController
+
 sealed class Screen(val route: String) {
     data object Home : Screen("home")
     data object Edit : Screen("edit/{reminderId}") {
@@ -16,10 +18,11 @@ sealed class Screen(val route: String) {
     }
 }
 
-@Composable
-fun ReminderNavGraph() {
-    val navController = rememberNavController()
 
+@Composable
+fun ReminderNavGraph(
+    navController: NavHostController = rememberNavController()
+) {
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
             HomeScreen(

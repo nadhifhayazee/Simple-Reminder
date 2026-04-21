@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 import com.nadhifhayazee.simplereminder.data.local.dao.ReminderDao
 import com.nadhifhayazee.simplereminder.data.local.entity.ReminderEntity
 
-@Database(entities = [ReminderEntity::class], version = 2)
+@Database(entities = [ReminderEntity::class], version = 2, exportSchema = false)
 abstract class ReminderDatabase : RoomDatabase() {
     abstract val reminderDao: ReminderDao
 }

@@ -12,14 +12,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import com.nadhifhayazee.simplereminder.ui.navigation.ReminderNavGraph
 import com.nadhifhayazee.simplereminder.ui.theme.SimpleReminderTheme
 import dagger.hilt.android.AndroidEntryPoint
+
+import androidx.navigation.compose.rememberNavController
+import com.nadhifhayazee.simplereminder.ui.navigation.Screen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private lateinit var permissionLauncher: ActivityResultLauncher<String>
+    private var navController: androidx.navigation.NavHostController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,8 +40,27 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SimpleReminderTheme {
-                ReminderNavGraph()
+                val controller = rememberNavController()
+                navController = controller
+                ReminderNavGraph(navController = controller)
+                
+                // Handle initial intent if app was closed
+                LaunchedEffect(intent) {
+                    handleIntent(intent)
+                }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val reminderId = intent.getIntExtra("reminderId", -1)
+        if (reminderId != -1) {
+            navController?.navigate(Screen.Edit.createRoute(reminderId))
         }
     }
 
