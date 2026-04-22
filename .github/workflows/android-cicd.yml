@@ -39,8 +39,6 @@ jobs:
           name: app-release
           path: app/build/outputs/bundle/release/app-release.aab
 
-  # This job will only run on the 'main' branch if the build is successful
-  # and if you have added the required Secrets to GitHub.
   publish:
     name: Publish to Play Store
     needs: build
@@ -66,11 +64,14 @@ jobs:
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Create Service Account Key File
+        run: echo "${{ secrets.SERVICE_ACCOUNT_JSON_KEY_BASE64 }}" | base64 -d > service_account.json
+
       - name: Upload to Google Play
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonKeyBase64: ${{ secrets.SERVICE_ACCOUNT_JSON_KEY_BASE64 }}
+          serviceAccountJson: service_account.json
           packageName: com.nadhifhayazee.simplereminder
           releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
-          track: internal # Options: internal, alpha, beta, production
+          track: internal
           status: completed
