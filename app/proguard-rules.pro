@@ -1,21 +1,50 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Optimization and security improvements
+-repackageclasses ''
+-allowaccessmodification
+-overloadaggressively
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep attributes for better crash reporting but obscure source files
+-keepattributes Signature,InnerClasses,EnclosingMethod,*Annotation*
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Remove debug logs in release builds for security
+# This prevents leaking sensitive information in logs
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+    public static *** w(...);
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Room specific rules to prevent obfuscation from breaking database queries
+-keepclassmembers class * extends androidx.room.RoomDatabase {
+    <init>(...);
+}
+-keep @androidx.room.Entity class * { *; }
+-keep class * extends androidx.room.RoomDatabase
+-keep class * implements androidx.room.RoomDatabase$Callback
+-keep class androidx.room.RoomDatabase { *; }
+
+# Hilt and Dagger rules
+-keep @dagger.hilt.EntryPoint class * { *; }
+-keep @dagger.hilt.android.EntryPointAccessors class * { *; }
+-keep class * extends dagger.hilt.internal.GeneratedComponentManager
+-keep class * implements dagger.hilt.internal.GeneratedComponent
+
+# Keep domain models and Room entities
+# Obfuscating these can break Room's reflection-based field mapping
+-keep class com.nadhifhayazee.simplereminder.domain.model.** { *; }
+-keep class com.nadhifhayazee.simplereminder.data.local.entity.** { *; }
+
+# Coroutines rules
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.coroutines.android.HandlerContext {
+    long pass;
+}
+
+# Preserve Compose-related annotations to ensure correct UI behavior
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable <methods>;
+    @androidx.compose.runtime.ReadOnlyComposable <methods>;
+}
