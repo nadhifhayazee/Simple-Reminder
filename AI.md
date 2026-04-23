@@ -23,9 +23,10 @@ This file provides foundational context for AI assistants and agents working on 
 
 ## ⚠️ Critical Rules
 1. **No Logic in UI**: Composables should only emit Intents and render State.
-2. **Notification Precision**: Always use `AlarmManager.setExactAndAllowWhileIdle` for reminder deadlines.
-3. **Widget Sync**: Any data change (Add/Update/Delete) MUST trigger `WidgetUpdater.updateWidget()`.
-4. **Testing**: New features MUST include a corresponding Unit Test for the Use Case or ViewModel.
+2. **Atomic Composables**: Break large UI screens into small, reusable components (e.g., in a `components/` sub-folder). Avoid monolithic `@Composable` functions longer than 50-100 lines.
+3. **Notification Precision**: Always use `AlarmManager.setExactAndAllowWhileIdle` for reminder deadlines.
+4. **Widget Sync**: Any data change (Add/Update/Delete) MUST trigger `WidgetUpdater.updateWidget()`.
+5. **Testing**: New features MUST include a corresponding Unit Test for the Use Case or ViewModel.
 
 ## 🔗 Key Entry Points
 - `MainActivity.kt`: Handles Deep Links from the Widget.

@@ -12,6 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.nadhifhayazee.simplereminder.ui.component.LoadingScreen
+import com.nadhifhayazee.simplereminder.ui.screen.edit.components.DeadlineCard
+import com.nadhifhayazee.simplereminder.ui.screen.edit.components.EditDatePickerDialog
+import com.nadhifhayazee.simplereminder.ui.screen.edit.components.EditTimePickerDialog
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -52,9 +56,7 @@ fun EditReminderScreen(
         }
     ) { padding ->
         if (state.isLoading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            LoadingScreen(modifier = Modifier.padding(padding))
         } else if (state.reminder != null) {
             val reminder = state.reminder!!
             Column(
@@ -74,46 +76,20 @@ fun EditReminderScreen(
                 )
 
                 // Date Picker Trigger
-                OutlinedCard(
-                    onClick = { showDatePicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(Icons.Outlined.DateRange, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Column {
-                            Text("Deadline Date", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                            Text(dateFormat.format(Date(reminder.deadline)), style = MaterialTheme.typography.bodyLarge)
-                        }
-                    }
-                }
+                DeadlineCard(
+                    label = "Deadline Date",
+                    value = dateFormat.format(Date(reminder.deadline)),
+                    icon = Icons.Outlined.DateRange,
+                    onClick = { showDatePicker = true }
+                )
 
                 // Time Picker Trigger
-                OutlinedCard(
-                    onClick = { showTimePicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(Icons.Outlined.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Column {
-                            Text("Deadline Time", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                            Text(timeFormat.format(Date(reminder.deadline)), style = MaterialTheme.typography.bodyLarge)
-                        }
-                    }
-                }
+                DeadlineCard(
+                    label = "Deadline Time",
+                    value = timeFormat.format(Date(reminder.deadline)),
+                    icon = Icons.Outlined.Schedule,
+                    onClick = { showTimePicker = true }
+                )
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -129,61 +105,19 @@ fun EditReminderScreen(
             }
         }
 
-        // Date Picker Dialog
         if (showDatePicker) {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = state.reminder?.deadline
+            EditDatePickerDialog(
+                initialDateMillis = state.reminder?.deadline,
+                onDateSelected = { viewModel.handleIntent(EditIntent.UpdateDeadline(it)) },
+                onDismiss = { showDatePicker = false }
             )
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            // Maintain current time when changing date
-                            val calendar = Calendar.getInstance().apply {
-                                timeInMillis = state.reminder?.deadline ?: System.currentTimeMillis()
-                                val currentHour = get(Calendar.HOUR_OF_DAY)
-                                val currentMinute = get(Calendar.MINUTE)
-                                
-                                timeInMillis = millis
-                                set(Calendar.HOUR_OF_DAY, currentHour)
-                                set(Calendar.MINUTE, currentMinute)
-                            }
-                            viewModel.handleIntent(EditIntent.UpdateDeadline(calendar.timeInMillis))
-                        }
-                        showDatePicker = false
-                    }) { Text("OK") }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
         }
 
-        // Time Picker Dialog
         if (showTimePicker) {
-            val calendar = Calendar.getInstance().apply {
-                timeInMillis = state.reminder?.deadline ?: System.currentTimeMillis()
-            }
-            val timePickerState = rememberTimePickerState(
-                initialHour = calendar.get(Calendar.HOUR_OF_DAY),
-                initialMinute = calendar.get(Calendar.MINUTE)
-            )
-            AlertDialog(
-                onDismissRequest = { showTimePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        val newCalendar = Calendar.getInstance().apply {
-                            timeInMillis = state.reminder?.deadline ?: System.currentTimeMillis()
-                            set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                            set(Calendar.MINUTE, timePickerState.minute)
-                        }
-                        viewModel.handleIntent(EditIntent.UpdateDeadline(newCalendar.timeInMillis))
-                        showTimePicker = false
-                    }) { Text("OK") }
-                },
-                text = {
-                    TimePicker(state = timePickerState)
-                }
+            EditTimePickerDialog(
+                initialDateMillis = state.reminder?.deadline ?: System.currentTimeMillis(),
+                onTimeSelected = { viewModel.handleIntent(EditIntent.UpdateDeadline(it)) },
+                onDismiss = { showTimePicker = false }
             )
         }
     }
