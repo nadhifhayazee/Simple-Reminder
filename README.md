@@ -22,6 +22,10 @@ A modern, elegant Android application built with **Clean Architecture** and **MV
 - **Navigation**: Jetpack Compose Navigation
 - **Widget**: AppWidget Framework (RemoteViews)
 
+## 🤖 AI Assistance
+
+This project includes an [AI.md](AI.md) file that provides architectural mandates and coding standards. If you are using an AI coding assistant (like Claude, GPT, or Gemini), point it to this file to ensure it generates code consistent with this project's patterns.
+
 ## 🏗 Architecture Overview
 
 The project follows a strict three-layer Clean Architecture:

@@ -1,6 +1,6 @@
 # AI Context & Mandates: Simple Reminder
 
-This file provides foundational context for AI agents working on this codebase.
+This file provides foundational context for AI assistants and agents working on this codebase.
 
 ## 🏗 Architectural Mandates
 - **Pattern**: Clean Architecture + MVI (Model-View-Intent).
