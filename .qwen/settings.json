@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(find *)",
+      "Bash(test *)",
+      "Bash(/bin/ls *)",
+      "Bash(git *)",
+      "Bash(./gradlew *)"
+    ]
+  },
+  "$version": 3
+}

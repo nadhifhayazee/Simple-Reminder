@@ -38,6 +38,10 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.LoadReminders -> loadReminders()
             is HomeIntent.AddReminder -> addReminder(intent.name)
             is HomeIntent.UpdateReminder -> updateReminder(intent.reminder)
+            is HomeIntent.SearchQueryChanged -> updateSearchQuery(intent.query)
+            is HomeIntent.StatusFilterChanged -> updateStatusFilter(intent.status)
+            is HomeIntent.DateFilterChanged -> updateDateFilter(intent.startDate, intent.endDate)
+            is HomeIntent.ClearFilters -> clearFilters()
         }
     }
 
@@ -45,7 +49,13 @@ class HomeViewModel @Inject constructor(
         getRemindersUseCase()
             .onStart { _state.update { it.copy(isLoading = true) } }
             .onEach { reminders ->
-                _state.update { it.copy(reminders = reminders, isLoading = false) }
+                _state.update {
+                    it.copy(
+                        reminders = reminders,
+                        filteredReminders = applyFilters(reminders, it),
+                        isLoading = false
+                    )
+                }
             }
             .catch { e ->
                 _state.update { it.copy(isLoading = false, error = e.message) }
@@ -84,5 +94,76 @@ class HomeViewModel @Inject constructor(
                 _effect.emit(HomeEffect.ShowError(e.message ?: "Failed to update reminder"))
             }
         }
+    }
+
+    private fun updateSearchQuery(query: String) {
+        _state.update {
+            it.copy(
+                searchQuery = query,
+                filteredReminders = applyFilters(it.reminders, it.copy(searchQuery = query))
+            )
+        }
+    }
+
+    private fun updateStatusFilter(status: ReminderStatus?) {
+        val newStatus = if (_state.value.statusFilter == status) null else status
+        _state.update {
+            it.copy(
+                statusFilter = newStatus,
+                filteredReminders = applyFilters(it.reminders, it.copy(statusFilter = newStatus))
+            )
+        }
+    }
+
+    private fun updateDateFilter(startDate: Long?, endDate: Long?) {
+        _state.update {
+            it.copy(
+                dateFilterStartDate = startDate,
+                dateFilterEndDate = endDate,
+                filteredReminders = applyFilters(
+                    it.reminders,
+                    it.copy(dateFilterStartDate = startDate, dateFilterEndDate = endDate)
+                )
+            )
+        }
+    }
+
+    private fun clearFilters() {
+        _state.update {
+            it.copy(
+                searchQuery = "",
+                statusFilter = null,
+                dateFilterStartDate = null,
+                dateFilterEndDate = null,
+                filteredReminders = it.reminders
+            )
+        }
+    }
+
+    private fun applyFilters(reminders: List<Reminder>, state: HomeState): List<Reminder> {
+        var result = reminders
+
+        // Filter by search query
+        if (state.searchQuery.isNotBlank()) {
+            val query = state.searchQuery.lowercase()
+            result = result.filter { it.name.lowercase().contains(query) }
+        }
+
+        // Filter by status
+        if (state.statusFilter != null) {
+            result = result.filter { it.status == state.statusFilter }
+        }
+
+        // Filter by date range
+        state.dateFilterStartDate?.let { start ->
+            result = result.filter { it.deadline >= start }
+        }
+        state.dateFilterEndDate?.let { end ->
+            // End date should be inclusive of the whole day
+            val endOfDay = end + 24 * 60 * 60 * 1000 - 1
+            result = result.filter { it.deadline <= endOfDay }
+        }
+
+        return result
     }
 }
