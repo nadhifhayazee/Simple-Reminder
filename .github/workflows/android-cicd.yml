@@ -73,5 +73,5 @@ jobs:
           serviceAccountJson: service_account.json
           packageName: com.nadhifhayazee.simplereminder
           releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
-          track: internal
+          track: production
           status: completed
