@@ -75,9 +75,9 @@ class ReminderRemoteViewsFactory(
         views.setTextViewText(R.id.reminder_deadline, "Due ${dateFormat.format(Date(reminder.deadline))}")
 
         val indicatorRes = when (reminder.status) {
-            ReminderStatus.TODO -> R.drawable.widget_indicator_blue
-            ReminderStatus.IN_PROGRESS -> R.drawable.widget_indicator_yellow
-            ReminderStatus.DONE -> R.drawable.widget_indicator_green
+            ReminderStatus.TODO -> R.drawable.widget_indicator_blue // Neutral 90
+            ReminderStatus.IN_PROGRESS -> R.drawable.widget_indicator_yellow // Indigo 600
+            ReminderStatus.DONE -> R.drawable.widget_indicator_green // Success 600
         }
         
         // Use setImageViewResource as it's more reliable for RemoteViews

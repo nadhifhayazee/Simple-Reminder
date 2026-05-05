@@ -1,13 +1,37 @@
 package com.nadhifhayazee.simplereminder.ui.screen.edit
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -16,8 +40,10 @@ import com.nadhifhayazee.simplereminder.ui.component.LoadingScreen
 import com.nadhifhayazee.simplereminder.ui.screen.edit.components.DeadlineCard
 import com.nadhifhayazee.simplereminder.ui.screen.edit.components.EditDatePickerDialog
 import com.nadhifhayazee.simplereminder.ui.screen.edit.components.EditTimePickerDialog
+import com.nadhifhayazee.simplereminder.ui.theme.Spacing
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +53,7 @@ fun EditReminderScreen(
     viewModel: EditViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("EEEE, MMM dd, yyyy", Locale.getDefault())
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -44,63 +70,115 @@ fun EditReminderScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Edit Reminder", fontWeight = FontWeight.Bold) },
+            TopAppBar(
+                title = { 
+                    Text(
+                        "Edit Details", 
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold 
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         }
     ) { padding ->
-        if (state.isLoading) {
-            LoadingScreen(modifier = Modifier.padding(padding))
-        } else if (state.reminder != null) {
-            val reminder = state.reminder!!
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-                    .padding(24.dp)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                // Name Field
-                OutlinedTextField(
-                    value = reminder.name,
-                    onValueChange = { viewModel.handleIntent(EditIntent.UpdateName(it)) },
-                    label = { Text("Reminder Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large
-                )
-
-                // Date Picker Trigger
-                DeadlineCard(
-                    label = "Deadline Date",
-                    value = dateFormat.format(Date(reminder.deadline)),
-                    icon = Icons.Outlined.DateRange,
-                    onClick = { showDatePicker = true }
-                )
-
-                // Time Picker Trigger
-                DeadlineCard(
-                    label = "Deadline Time",
-                    value = timeFormat.format(Date(reminder.deadline)),
-                    icon = Icons.Outlined.Schedule,
-                    onClick = { showTimePicker = true }
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Button(
-                    onClick = { viewModel.handleIntent(EditIntent.SaveReminder) },
+        AnimatedContent(
+            targetState = state,
+            modifier = Modifier.padding(padding),
+            label = "editContent"
+        ) { targetState ->
+            if (targetState.isLoading) {
+                LoadingScreen()
+            } else if (targetState.reminder != null) {
+                val reminder = targetState.reminder!!
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = MaterialTheme.shapes.large
+                        .fillMaxSize()
+                        .padding(Spacing.md),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.lg)
                 ) {
-                    Text("Save Changes", style = MaterialTheme.typography.titleMedium)
+                    // Name Field - Premium Style
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        Text(
+                            "What should be done?",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        OutlinedTextField(
+                            value = reminder.name,
+                            onValueChange = { viewModel.handleIntent(EditIntent.UpdateName(it)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            textStyle = MaterialTheme.typography.bodyLarge,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            )
+                        )
+                    }
+
+                    // Deadline Section
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        Text(
+                            "When?",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        
+                        DeadlineCard(
+                            label = "Date",
+                            value = dateFormat.format(Date(reminder.deadline)),
+                            icon = Icons.Outlined.CalendarMonth,
+                            onClick = { showDatePicker = true }
+                        )
+
+                        DeadlineCard(
+                            label = "Time",
+                            value = timeFormat.format(Date(reminder.deadline)),
+                            icon = Icons.Outlined.Schedule,
+                            onClick = { showTimePicker = true }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Button(
+                        onClick = { viewModel.handleIntent(EditIntent.SaveReminder) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 8.dp
+                        )
+                    ) {
+                        Text(
+                            "Save Changes", 
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

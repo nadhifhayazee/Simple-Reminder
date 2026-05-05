@@ -1,7 +1,9 @@
 package com.nadhifhayazee.simplereminder.domain.model
 
-enum class ReminderStatus {
-    TODO, IN_PROGRESS, DONE
+enum class ReminderStatus(val displayName: String) {
+    TODO("Todo"),
+    IN_PROGRESS("In Progress"),
+    DONE("Done")
 }
 
 data class Reminder(

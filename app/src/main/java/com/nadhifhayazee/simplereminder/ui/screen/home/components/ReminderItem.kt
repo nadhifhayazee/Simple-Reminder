@@ -1,45 +1,34 @@
 package com.nadhifhayazee.simplereminder.ui.screen.home.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nadhifhayazee.simplereminder.domain.model.Reminder
 import com.nadhifhayazee.simplereminder.domain.model.ReminderStatus
+import com.nadhifhayazee.simplereminder.ui.theme.Spacing
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReminderItem(
     reminder: Reminder,
@@ -50,81 +39,94 @@ fun ReminderItem(
     val deadlineStr = dateFormat.format(Date(reminder.deadline))
     var showMenu by remember { mutableStateOf(false) }
 
-    ElevatedCard(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        onClick = onClick,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(20.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(Spacing.md)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            StatusIndicator(
+                status = reminder.status,
+                onStatusClick = { showMenu = true }
+            )
+
+            Spacer(modifier = Modifier.width(Spacing.md))
+
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    StatusIndicator(status = reminder.status)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = reminder.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                Text(
+                    text = reminder.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(Spacing.xs))
                 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Notifications,
+                        imageVector = Icons.Outlined.CalendarToday,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = "Due $deadlineStr",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = deadlineStr,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 }
             }
 
             Box {
-                IconButton(onClick = { showMenu = true }) {
+                IconButton(
+                    onClick = onClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Change Status",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Details",
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                 }
-                
+
                 DropdownMenu(
                     expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
+                    onDismissRequest = { showMenu = false },
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                 ) {
                     ReminderStatus.entries.forEach { status ->
                         DropdownMenuItem(
-                            text = { 
+                            text = {
                                 Text(
-                                    text = if (status == ReminderStatus.DONE) "Mark as Done" else status.name,
-                                    style = MaterialTheme.typography.bodyLarge
-                                ) 
+                                    text = status.displayName,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             },
                             onClick = {
                                 onStatusChange(status)
                                 showMenu = false
                             },
                             leadingIcon = {
-                                StatusIndicator(status = status, size = 12.dp)
+                                StatusCircle(status = status, size = 10.dp)
                             }
                         )
                     }
@@ -135,16 +137,47 @@ fun ReminderItem(
 }
 
 @Composable
-fun StatusIndicator(status: ReminderStatus, size: androidx.compose.ui.unit.Dp = 10.dp) {
+private fun StatusIndicator(
+    status: ReminderStatus,
+    onStatusClick: () -> Unit
+) {
+    val color by animateColorAsState(
+        targetValue = when (status) {
+            ReminderStatus.TODO -> MaterialTheme.colorScheme.outline
+            ReminderStatus.IN_PROGRESS -> MaterialTheme.colorScheme.primary
+            ReminderStatus.DONE -> Color(0xFF10B981)
+        },
+        label = "statusColor"
+    )
+
+    Surface(
+        modifier = Modifier
+            .size(24.dp)
+            .clickable(onClick = onStatusClick),
+        shape = CircleShape,
+        color = color.copy(alpha = 0.1f),
+        border = BorderStroke(2.dp, color)
+    ) {
+        if (status == ReminderStatus.DONE) {
+            Box(
+                modifier = Modifier
+                    .padding(4.dp)
+                    .background(color, CircleShape)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatusCircle(status: ReminderStatus, size: Dp) {
     val color = when (status) {
-        ReminderStatus.TODO -> Color(0xFF4285F4) // Google Blue
-        ReminderStatus.IN_PROGRESS -> Color(0xFFFBBC04) // Google Yellow
-        ReminderStatus.DONE -> Color(0xFF34A853) // Google Green
+        ReminderStatus.TODO -> MaterialTheme.colorScheme.outline
+        ReminderStatus.IN_PROGRESS -> MaterialTheme.colorScheme.primary
+        ReminderStatus.DONE -> Color(0xFF10B981)
     }
     Surface(
         modifier = Modifier.size(size),
-        shape = androidx.compose.foundation.shape.CircleShape,
+        shape = CircleShape,
         color = color
     ) {}
 }
-

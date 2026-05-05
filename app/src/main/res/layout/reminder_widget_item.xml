@@ -3,16 +3,16 @@
     android:id="@+id/reminder_item_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="10dp"
+    android:background="@drawable/widget_item_background"
     android:gravity="center_vertical"
-    android:background="@drawable/widget_item_background">
+    android:orientation="horizontal"
+    android:padding="12dp">
 
     <ImageView
         android:id="@+id/status_indicator"
         android:layout_width="12dp"
         android:layout_height="12dp"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="12dp"
         android:src="@drawable/widget_indicator_blue" />
 
     <LinearLayout
@@ -25,17 +25,25 @@
             android:id="@+id/reminder_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:textStyle="bold"
             android:fontFamily="@font/inter"
-            android:textColor="@android:color/black" />
+            android:textColor="@color/neutral_10"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/reminder_deadline"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
             android:fontFamily="@font/inter"
-            android:textColor="@android:color/darker_gray" />
+            android:textColor="@color/neutral_20"
+            android:textSize="12sp" />
     </LinearLayout>
+
+    <ImageView
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:alpha="0.3"
+        android:src="@drawable/ic_notification"
+        android:tint="@color/neutral_10" />
+
 </LinearLayout>
