@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.nadhifhayazee.simplereminder.domain.model.Reminder
+import com.nadhifhayazee.simplereminder.domain.usecase.GroupedReminders
 import com.nadhifhayazee.simplereminder.ui.component.EmptyState
 import com.nadhifhayazee.simplereminder.ui.component.LoadingScreen
 import com.nadhifhayazee.simplereminder.ui.screen.home.components.QuickAddReminderBar

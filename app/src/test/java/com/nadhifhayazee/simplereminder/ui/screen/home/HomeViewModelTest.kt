@@ -3,10 +3,7 @@ package com.nadhifhayazee.simplereminder.ui.screen.home
 import app.cash.turbine.test
 import com.nadhifhayazee.simplereminder.domain.model.Reminder
 import com.nadhifhayazee.simplereminder.domain.model.ReminderStatus
-import com.nadhifhayazee.simplereminder.domain.usecase.AddReminderUseCase
-import com.nadhifhayazee.simplereminder.domain.usecase.DeleteReminderUseCase
-import com.nadhifhayazee.simplereminder.domain.usecase.GetRemindersUseCase
-import com.nadhifhayazee.simplereminder.domain.usecase.UpdateReminderUseCase
+import com.nadhifhayazee.simplereminder.domain.usecase.*
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -27,6 +24,7 @@ class HomeViewModelTest {
     private val addReminderUseCase: AddReminderUseCase = mockk()
     private val updateReminderUseCase: UpdateReminderUseCase = mockk()
     private val deleteReminderUseCase: DeleteReminderUseCase = mockk()
+    private val getGroupedRemindersUseCase: GetGroupedRemindersUseCase = mockk()
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -41,25 +39,29 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `initial state should load reminders`() = runTest {
+    fun `initial state should load reminders and group them`() = runTest {
         // Given
         val reminders = listOf(
             Reminder(id = 1, name = "Task 1", deadline = 100L, status = ReminderStatus.TODO)
         )
+        val grouped = GroupedReminders(today = reminders)
+        
         every { getRemindersUseCase() } returns flowOf(reminders)
+        every { getGroupedRemindersUseCase(reminders) } returns grouped
 
         // When
         val viewModel = HomeViewModel(
             getRemindersUseCase,
             addReminderUseCase,
             updateReminderUseCase,
-            deleteReminderUseCase
+            deleteReminderUseCase,
+            getGroupedRemindersUseCase
         )
 
         // Then
         viewModel.state.test {
             val state = awaitItem()
-            assertEquals(reminders, state.reminders)
+            assertEquals(grouped, state.groupedReminders)
             assertFalse(state.isLoading)
         }
     }
@@ -69,13 +71,15 @@ class HomeViewModelTest {
         // Given
         val reminders = emptyList<Reminder>()
         every { getRemindersUseCase() } returns flowOf(reminders)
+        every { getGroupedRemindersUseCase(any()) } returns GroupedReminders()
         coEvery { addReminderUseCase(any()) } returns 1L
 
         val viewModel = HomeViewModel(
             getRemindersUseCase,
             addReminderUseCase,
             updateReminderUseCase,
-            deleteReminderUseCase
+            deleteReminderUseCase,
+            getGroupedRemindersUseCase
         )
 
         // When
