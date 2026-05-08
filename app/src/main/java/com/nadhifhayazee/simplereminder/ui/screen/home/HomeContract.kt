@@ -8,8 +8,16 @@ sealed class HomeIntent {
     data class UpdateReminder(val reminder: Reminder) : HomeIntent()
 }
 
+data class GroupedReminders(
+    val today: List<Reminder> = emptyList(),
+    val daily: List<Reminder> = emptyList(),
+    val weekly: List<Reminder> = emptyList(),
+    val monthly: List<Reminder> = emptyList(),
+    val upcoming: Map<String, List<Reminder>> = emptyMap()
+)
+
 data class HomeState(
-    val reminders: List<Reminder> = emptyList(),
+    val groupedReminders: GroupedReminders = GroupedReminders(),
     val isLoading: Boolean = false,
     val error: String? = null
 )

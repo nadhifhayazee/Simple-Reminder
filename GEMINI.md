@@ -22,11 +22,15 @@ This file provides foundational context for AI assistants and agents working on 
 - **Testing**: MockK, Turbine, and JUnit 4.
 
 ## ⚠️ Critical Rules
-1. **No Logic in UI**: Composables should only emit Intents and render State.
-2. **Atomic Composables**: Break large UI screens into small, reusable components (e.g., in a `components/` sub-folder). Avoid monolithic `@Composable` functions longer than 50-100 lines.
-3. **Notification Precision**: Always use `AlarmManager.setExactAndAllowWhileIdle` for reminder deadlines.
-4. **Widget Sync**: Any data change (Add/Update/Delete) MUST trigger `WidgetUpdater.updateWidget()`.
-5. **Testing**: New features MUST include a corresponding Unit Test for the Use Case or ViewModel.
+1. **No Logic in UI**: Composables should only emit Intents and render State. Avoid any data transformation or grouping logic in UI files.
+2. **Atomic Composables**: Break large UI screens into small, reusable components in `components/` sub-folders. Standardize component extraction.
+3. **Encapsulated Side Effects**: UseCases MUST encapsulate all associated side effects (e.g., `WidgetUpdater`, `NotificationScheduler`) to ensure atomic data consistency.
+4. **Domain Layer Purity**: The `domain` layer MUST remain a pure Kotlin module. External side effects (Widgets, Notifications) MUST be defined via interfaces in `domain` and implemented in `data`.
+5. **Pre-Processed State**: ViewModels or UseCases MUST perform data transformations (grouping, sorting, formatting) before updating State. UI should receive "ready-to-render" data.
+6. **Notification Precision**: Always use `AlarmManager.setExactAndAllowWhileIdle` for reminder deadlines.
+7. **Widget Sync**: Every data modification (Add/Update/Delete) MUST trigger a widget refresh via the `WidgetUpdater` interface.
+8. **Testing**: New features MUST include corresponding Unit Tests for UseCases or ViewModels. Verify rollover and lifecycle logic explicitly.
+9. **No Logic Duplication**: Complex logic (like date math or rollover rules) MUST reside in a single UseCase and be reused across the app and widget.
 
 ## 🔗 Key Entry Points
 - `MainActivity.kt`: Handles Deep Links from the Widget.

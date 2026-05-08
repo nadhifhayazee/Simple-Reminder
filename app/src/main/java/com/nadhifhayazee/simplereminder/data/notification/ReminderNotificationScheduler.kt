@@ -42,33 +42,43 @@ class ReminderNotificationScheduler @Inject constructor(
 
         // 30 minutes before deadline
         val triggerAt = reminder.deadline - 30 * 60 * 1000
+        val now = System.currentTimeMillis()
 
-        if (triggerAt <= System.currentTimeMillis()) {
-            Log.d("NotificationScheduler", "Not scheduling for ${reminder.name}: trigger time $triggerAt is in the past (now is ${System.currentTimeMillis()})")
+        // If deadline is in the past, don't schedule
+        if (reminder.deadline <= now) {
+            Log.d("NotificationScheduler", "Not scheduling for ${reminder.name}: deadline is in the past")
             return
         }
 
-        Log.d("NotificationScheduler", "Scheduling notification for ${reminder.name} at $triggerAt")
+        // If the 30-minute lead time has already passed, trigger with a slight delay (1s)
+        val finalTriggerAt = if (triggerAt <= now) {
+            Log.d("NotificationScheduler", "Trigger time for ${reminder.name} was in the past, scheduling for immediate trigger")
+            now + 1000 
+        } else {
+            triggerAt
+        }
+
+        Log.d("NotificationScheduler", "Scheduling notification for ${reminder.name} at $finalTriggerAt (deadline: ${reminder.deadline})")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (alarmManager.canScheduleExactAlarms()) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
-                    triggerAt,
+                    finalTriggerAt,
                     pendingIntent
                 )
             } else {
                 Log.w("NotificationScheduler", "Cannot schedule exact alarms, falling back to setAndAllowWhileIdle")
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
-                    triggerAt,
+                    finalTriggerAt,
                     pendingIntent
                 )
             }
         } else {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                triggerAt,
+                finalTriggerAt,
                 pendingIntent
             )
         }

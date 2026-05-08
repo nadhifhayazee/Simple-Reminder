@@ -29,15 +29,47 @@ import com.nadhifhayazee.simplereminder.ui.theme.Spacing
 import java.text.SimpleDateFormat
 import java.util.*
 
+import androidx.compose.material.icons.outlined.Repeat
+import com.nadhifhayazee.simplereminder.domain.model.RepeatInterval
+
 @Composable
 fun ReminderItem(
     reminder: Reminder,
     onStatusChange: (ReminderStatus) -> Unit,
     onClick: () -> Unit
 ) {
-    val dateFormat = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
+    val isRecurring = reminder.repeatInterval != RepeatInterval.NONE
+    val formatPattern = if (isRecurring) "HH:mm" else "MMM dd, HH:mm"
+    val dateFormat = SimpleDateFormat(formatPattern, Locale.getDefault())
     val deadlineStr = dateFormat.format(Date(reminder.deadline))
     var showMenu by remember { mutableStateOf(false) }
+
+    val remainingDaysInfo = if (isRecurring) {
+        val now = Calendar.getInstance()
+        val deadlineCal = Calendar.getInstance().apply { timeInMillis = reminder.deadline }
+        
+        // Clear time to compare days
+        now.set(Calendar.HOUR_OF_DAY, 0)
+        now.set(Calendar.MINUTE, 0)
+        now.set(Calendar.SECOND, 0)
+        now.set(Calendar.MILLISECOND, 0)
+        
+        val deadlineDate = deadlineCal.clone() as Calendar
+        deadlineDate.set(Calendar.HOUR_OF_DAY, 0)
+        deadlineDate.set(Calendar.MINUTE, 0)
+        deadlineDate.set(Calendar.SECOND, 0)
+        deadlineDate.set(Calendar.MILLISECOND, 0)
+
+        val diffMillis = deadlineDate.timeInMillis - now.timeInMillis
+        val diffDays = (diffMillis / (24 * 60 * 60 * 1000)).toInt()
+        
+        when {
+            diffDays == 0 -> "Today"
+            diffDays == 1 -> "Tomorrow"
+            diffDays > 1 -> "In $diffDays days"
+            else -> null
+        }
+    } else null
 
     Surface(
         modifier = Modifier
@@ -68,12 +100,24 @@ fun ReminderItem(
             Spacer(modifier = Modifier.width(Spacing.md))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = reminder.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = reminder.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (reminder.repeatInterval != RepeatInterval.NONE) {
+                        Spacer(modifier = Modifier.width(Spacing.xs))
+                        Icon(
+                            imageVector = Icons.Outlined.Repeat,
+                            contentDescription = "Recurring",
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                        )
+                    }
+                }
                 
                 Spacer(modifier = Modifier.height(Spacing.xs))
                 
@@ -88,7 +132,7 @@ fun ReminderItem(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                     Text(
-                        text = deadlineStr,
+                        text = if (remainingDaysInfo != null) "$remainingDaysInfo, $deadlineStr" else deadlineStr,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
@@ -96,18 +140,6 @@ fun ReminderItem(
             }
 
             Box {
-                IconButton(
-                    onClick = onClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Details",
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                    )
-                }
-
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },

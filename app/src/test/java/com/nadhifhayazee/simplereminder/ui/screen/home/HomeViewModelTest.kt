@@ -3,7 +3,6 @@ package com.nadhifhayazee.simplereminder.ui.screen.home
 import app.cash.turbine.test
 import com.nadhifhayazee.simplereminder.domain.model.Reminder
 import com.nadhifhayazee.simplereminder.domain.model.ReminderStatus
-import com.nadhifhayazee.simplereminder.domain.notification.NotificationScheduler
 import com.nadhifhayazee.simplereminder.domain.usecase.AddReminderUseCase
 import com.nadhifhayazee.simplereminder.domain.usecase.DeleteReminderUseCase
 import com.nadhifhayazee.simplereminder.domain.usecase.GetRemindersUseCase
@@ -28,7 +27,6 @@ class HomeViewModelTest {
     private val addReminderUseCase: AddReminderUseCase = mockk()
     private val updateReminderUseCase: UpdateReminderUseCase = mockk()
     private val deleteReminderUseCase: DeleteReminderUseCase = mockk()
-    private val notificationScheduler: NotificationScheduler = mockk()
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -55,8 +53,7 @@ class HomeViewModelTest {
             getRemindersUseCase,
             addReminderUseCase,
             updateReminderUseCase,
-            deleteReminderUseCase,
-            notificationScheduler
+            deleteReminderUseCase
         )
 
         // Then
@@ -73,14 +70,12 @@ class HomeViewModelTest {
         val reminders = emptyList<Reminder>()
         every { getRemindersUseCase() } returns flowOf(reminders)
         coEvery { addReminderUseCase(any()) } returns 1L
-        coEvery { notificationScheduler.scheduleNotification(any()) } returns Unit
 
         val viewModel = HomeViewModel(
             getRemindersUseCase,
             addReminderUseCase,
             updateReminderUseCase,
-            deleteReminderUseCase,
-            notificationScheduler
+            deleteReminderUseCase
         )
 
         // When

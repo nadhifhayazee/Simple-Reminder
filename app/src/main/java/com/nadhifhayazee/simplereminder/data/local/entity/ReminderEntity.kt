@@ -10,5 +10,7 @@ data class ReminderEntity(
     val name: String,
     val deadline: Long,
     val status: String,
+    val repeatInterval: String = "NONE",
+    val repeatDays: String? = null, // Comma-separated integers
     val createdAt: Long
 )

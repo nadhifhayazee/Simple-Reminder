@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ReminderDao {
-    @Query("SELECT * FROM reminders ORDER BY createdAt DESC")
+    @Query("SELECT * FROM reminders ORDER BY deadline ASC")
     fun getReminders(): Flow<List<ReminderEntity>>
 
     @Query("SELECT * FROM reminders WHERE id = :id")

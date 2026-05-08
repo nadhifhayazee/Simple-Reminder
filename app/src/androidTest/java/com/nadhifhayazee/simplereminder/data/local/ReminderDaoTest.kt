@@ -67,9 +67,9 @@ class ReminderDaoTest {
     }
 
     @Test
-    fun getRemindersReturnsFlowSortedByCreatedAt() = runBlocking {
-        val entity1 = ReminderEntity(1, "Task 1", 100L, "TODO", 10L)
-        val entity2 = ReminderEntity(2, "Task 2", 200L, "TODO", 20L)
+    fun getRemindersReturnsFlowSortedByDeadline() = runBlocking {
+        val entity1 = ReminderEntity(1, "Task 1", 200L, "TODO", 10L)
+        val entity2 = ReminderEntity(2, "Task 2", 100L, "TODO", 20L)
         
         dao.insertReminder(entity1)
         dao.insertReminder(entity2)
@@ -77,7 +77,7 @@ class ReminderDaoTest {
         val reminders = dao.getReminders().first()
         
         assertEquals(2, reminders.size)
-        assertEquals(2, reminders[0].id) // Task 2 should be first (createdAt 20 > 10)
+        assertEquals(2, reminders[0].id) // Task 2 should be first (deadline 100 < 200)
         assertEquals(1, reminders[1].id)
     }
 }

@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nadhifhayazee.simplereminder.domain.model.Reminder
 import com.nadhifhayazee.simplereminder.domain.model.ReminderStatus
-import com.nadhifhayazee.simplereminder.domain.notification.NotificationScheduler
 import com.nadhifhayazee.simplereminder.domain.usecase.AddReminderUseCase
 import com.nadhifhayazee.simplereminder.domain.usecase.DeleteReminderUseCase
+import com.nadhifhayazee.simplereminder.domain.usecase.GetGroupedRemindersUseCase
 import com.nadhifhayazee.simplereminder.domain.usecase.GetRemindersUseCase
 import com.nadhifhayazee.simplereminder.domain.usecase.UpdateReminderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +20,7 @@ class HomeViewModel @Inject constructor(
     private val addReminderUseCase: AddReminderUseCase,
     private val updateReminderUseCase: UpdateReminderUseCase,
     private val deleteReminderUseCase: DeleteReminderUseCase,
-    private val notificationScheduler: NotificationScheduler
+    private val getGroupedRemindersUseCase: GetGroupedRemindersUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeState())
@@ -45,7 +45,19 @@ class HomeViewModel @Inject constructor(
         getRemindersUseCase()
             .onStart { _state.update { it.copy(isLoading = true) } }
             .onEach { reminders ->
-                _state.update { it.copy(reminders = reminders, isLoading = false) }
+                val grouped = getGroupedRemindersUseCase(reminders)
+                _state.update { 
+                    it.copy(
+                        groupedReminders = GroupedReminders(
+                            today = grouped.today,
+                            daily = grouped.daily,
+                            weekly = grouped.weekly,
+                            monthly = grouped.monthly,
+                            upcoming = grouped.upcoming
+                        ), 
+                        isLoading = false 
+                    ) 
+                }
             }
             .catch { e ->
                 _state.update { it.copy(isLoading = false, error = e.message) }
@@ -63,8 +75,7 @@ class HomeViewModel @Inject constructor(
                     deadline = deadline,
                     status = ReminderStatus.TODO
                 )
-                val id = addReminderUseCase(reminder)
-                notificationScheduler.scheduleNotification(reminder.copy(id = id.toInt()))
+                addReminderUseCase(reminder)
             } catch (e: Exception) {
                 _effect.emit(HomeEffect.ShowError(e.message ?: "Failed to add reminder"))
             }
@@ -76,7 +87,6 @@ class HomeViewModel @Inject constructor(
             try {
                 if (reminder.status == ReminderStatus.DONE) {
                     deleteReminderUseCase(reminder)
-                    notificationScheduler.cancelNotification(reminder)
                 } else {
                     updateReminderUseCase(reminder)
                 }
