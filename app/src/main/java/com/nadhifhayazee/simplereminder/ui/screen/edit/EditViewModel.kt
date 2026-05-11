@@ -2,12 +2,16 @@ package com.nadhifhayazee.simplereminder.ui.screen.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nadhifhayazee.simplereminder.domain.model.ReminderDefaults
 import com.nadhifhayazee.simplereminder.domain.model.ReminderStatus
 import com.nadhifhayazee.simplereminder.domain.model.RepeatInterval
 import com.nadhifhayazee.simplereminder.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,6 +28,9 @@ class EditViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(EditState())
     val state: StateFlow<EditState> = _state.asStateFlow()
+
+    private val _effect = MutableSharedFlow<EditEffect>()
+    val effect: SharedFlow<EditEffect> = _effect.asSharedFlow()
 
     fun handleIntent(intent: EditIntent) {
         when (intent) {
@@ -51,12 +58,14 @@ class EditViewModel @Inject constructor(
     private fun updateDeadline(deadline: Long) {
         val reminder = _state.value.reminder ?: return
         val finalDeadline = getFutureDeadlineUseCase(deadline, reminder.repeatInterval, reminder.repeatDays)
-        
+
         if (finalDeadline < System.currentTimeMillis()) {
-            _state.update { it.copy(error = "Cannot set a reminder in the past") }
+            viewModelScope.launch {
+                _effect.emit(EditEffect.ShowError("Cannot set a reminder in the past"))
+            }
             return
         }
-        
+
         _state.update { it.copy(reminder = it.reminder?.copy(deadline = finalDeadline), error = null) }
     }
 
@@ -66,7 +75,7 @@ class EditViewModel @Inject constructor(
             val updatedReminder = reminder.copy(repeatInterval = interval)
             
             val finalDeadline = if (interval == RepeatInterval.NONE && updatedReminder.deadline < System.currentTimeMillis()) {
-                System.currentTimeMillis() + 60 * 60 * 1000
+                System.currentTimeMillis() + ReminderDefaults.DEFAULT_DEADLINE_OFFSET_MS
             } else {
                 getFutureDeadlineUseCase(updatedReminder.deadline, interval, updatedReminder.repeatDays)
             }
@@ -96,9 +105,11 @@ class EditViewModel @Inject constructor(
 
     private fun saveReminder() {
         val reminder = _state.value.reminder ?: return
-        
+
         if (reminder.deadline < System.currentTimeMillis()) {
-            _state.update { it.copy(error = "Deadline must be in the future") }
+            viewModelScope.launch {
+                _effect.emit(EditEffect.ShowError("Deadline must be in the future"))
+            }
             return
         }
 
@@ -110,8 +121,9 @@ class EditViewModel @Inject constructor(
                     updateReminderUseCase(reminder)
                 }
                 _state.update { it.copy(isSaved = true) }
+                _effect.emit(EditEffect.ShowSuccess("Reminder updated"))
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message) }
+                _effect.emit(EditEffect.ShowError(e.message ?: "Failed to save reminder"))
             }
         }
     }

@@ -18,3 +18,8 @@ data class EditState(
     val isSaved: Boolean = false,
     val error: String? = null
 )
+
+sealed class EditEffect {
+    data class ShowError(val message: String) : EditEffect()
+    data class ShowSuccess(val message: String) : EditEffect()
+}

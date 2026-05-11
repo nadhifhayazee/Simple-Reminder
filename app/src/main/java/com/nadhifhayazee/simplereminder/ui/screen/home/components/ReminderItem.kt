@@ -44,16 +44,17 @@ fun ReminderItem(
     val deadlineStr = dateFormat.format(Date(reminder.deadline))
     var showMenu by remember { mutableStateOf(false) }
 
+    val isOverdue = reminder.deadline < System.currentTimeMillis()
+
     val remainingDaysInfo = if (isRecurring) {
         val now = Calendar.getInstance()
         val deadlineCal = Calendar.getInstance().apply { timeInMillis = reminder.deadline }
-        
-        // Clear time to compare days
+
         now.set(Calendar.HOUR_OF_DAY, 0)
         now.set(Calendar.MINUTE, 0)
         now.set(Calendar.SECOND, 0)
         now.set(Calendar.MILLISECOND, 0)
-        
+
         val deadlineDate = deadlineCal.clone() as Calendar
         deadlineDate.set(Calendar.HOUR_OF_DAY, 0)
         deadlineDate.set(Calendar.MINUTE, 0)
@@ -62,7 +63,7 @@ fun ReminderItem(
 
         val diffMillis = deadlineDate.timeInMillis - now.timeInMillis
         val diffDays = (diffMillis / (24 * 60 * 60 * 1000)).toInt()
-        
+
         when {
             diffDays == 0 -> "Today"
             diffDays == 1 -> "Tomorrow"
@@ -117,10 +118,25 @@ fun ReminderItem(
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                         )
                     }
+                    if (isOverdue) {
+                        Spacer(modifier = Modifier.width(Spacing.xs))
+                        Surface(
+                            color = MaterialTheme.colorScheme.error,
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                text = "OVERDUE",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onError,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
-                
+
                 Spacer(modifier = Modifier.height(Spacing.xs))
-                
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
@@ -129,12 +145,12 @@ fun ReminderItem(
                         imageVector = Icons.Outlined.CalendarToday,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        tint = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                     Text(
                         text = if (remainingDaysInfo != null) "$remainingDaysInfo, $deadlineStr" else deadlineStr,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 }
             }

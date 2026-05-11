@@ -14,6 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -27,17 +28,27 @@ class ReminderNotificationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val reminderId = intent.getIntExtra("reminder_id", 0)
-        
-        CoroutineScope(Dispatchers.IO).launch {
-            val reminder = repository.getReminderById(reminderId) ?: return@launch
-            
-            showNotification(context, reminder.id, reminder.name, reminder.deadline)
 
-            // If recurring, schedule the next occurrence
-            val nextDeadline = reminder.calculateNextOccurrence()
-            if (nextDeadline != null) {
-                val updatedReminder = reminder.copy(deadline = nextDeadline)
-                updateReminderUseCase(updatedReminder)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val reminder = repository.getReminderById(reminderId)
+                if (reminder == null) {
+                    Timber.w("Reminder with id $reminderId not found")
+                    return@launch
+                }
+
+                showNotification(context, reminder.id, reminder.name, reminder.deadline)
+
+                val nextDeadline = reminder.calculateNextOccurrence()
+                if (nextDeadline != null) {
+                    val updatedReminder = reminder.copy(deadline = nextDeadline)
+                    updateReminderUseCase(updatedReminder)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error processing reminder notification")
+            } finally {
+                pendingResult.finish()
             }
         }
     }

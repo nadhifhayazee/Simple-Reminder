@@ -32,6 +32,7 @@ fun EditReminderScreen(
     viewModel: EditViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(reminderId) {
         viewModel.handleIntent(EditIntent.LoadReminder(reminderId))
@@ -43,8 +44,28 @@ fun EditReminderScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is EditEffect.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                is EditEffect.ShowSuccess -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { EditTopBar(onNavigateBack) }
     ) { padding ->
         EditContent(

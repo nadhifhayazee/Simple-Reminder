@@ -6,12 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import com.nadhifhayazee.simplereminder.domain.model.Reminder
+import com.nadhifhayazee.simplereminder.domain.model.ReminderDefaults
 import com.nadhifhayazee.simplereminder.domain.model.ReminderStatus
 import com.nadhifhayazee.simplereminder.domain.notification.NotificationScheduler
 import dagger.hilt.android.qualifiers.ApplicationContext
+import timber.log.Timber
 import javax.inject.Inject
-
-import android.util.Log
 
 class ReminderNotificationScheduler @Inject constructor(
     @ApplicationContext private val context: Context
@@ -24,7 +24,7 @@ class ReminderNotificationScheduler @Inject constructor(
         cancelNotification(reminder)
 
         if (reminder.status == ReminderStatus.DONE) {
-            Log.d("NotificationScheduler", "Not scheduling for ${reminder.name}: status is DONE")
+            Timber.d("Not scheduling for ${reminder.name}: status is DONE")
             return
         }
 
@@ -40,25 +40,22 @@ class ReminderNotificationScheduler @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // 30 minutes before deadline
-        val triggerAt = reminder.deadline - 30 * 60 * 1000
+        val triggerAt = reminder.deadline - ReminderDefaults.NOTIFICATION_LEAD_TIME_MS
         val now = System.currentTimeMillis()
 
-        // If deadline is in the past, don't schedule
         if (reminder.deadline <= now) {
-            Log.d("NotificationScheduler", "Not scheduling for ${reminder.name}: deadline is in the past")
+            Timber.d("Not scheduling for ${reminder.name}: deadline is in the past")
             return
         }
 
-        // If the 30-minute lead time has already passed, trigger with a slight delay (1s)
         val finalTriggerAt = if (triggerAt <= now) {
-            Log.d("NotificationScheduler", "Trigger time for ${reminder.name} was in the past, scheduling for immediate trigger")
-            now + 1000 
+            Timber.d("Trigger time for ${reminder.name} was in the past, scheduling for immediate trigger")
+            now + ReminderDefaults.IMMEDIATE_TRIGGER_DELAY_MS
         } else {
             triggerAt
         }
 
-        Log.d("NotificationScheduler", "Scheduling notification for ${reminder.name} at $finalTriggerAt (deadline: ${reminder.deadline})")
+        Timber.d("Scheduling notification for ${reminder.name} at $finalTriggerAt (deadline: ${reminder.deadline})")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (alarmManager.canScheduleExactAlarms()) {
@@ -68,7 +65,7 @@ class ReminderNotificationScheduler @Inject constructor(
                     pendingIntent
                 )
             } else {
-                Log.w("NotificationScheduler", "Cannot schedule exact alarms, falling back to setAndAllowWhileIdle")
+                Timber.w("Cannot schedule exact alarms, falling back to setAndAllowWhileIdle")
                 alarmManager.setAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     finalTriggerAt,

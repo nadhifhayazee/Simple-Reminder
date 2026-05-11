@@ -26,9 +26,42 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is HomeEffect.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                is HomeEffect.ShowSuccess -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                is HomeEffect.ShowUndoDelete -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = "Reminder marked as done",
+                        actionLabel = "Undo",
+                        duration = SnackbarDuration.Long
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        viewModel.handleIntent(HomeIntent.UndoDelete(effect.reminder))
+                    } else {
+                        viewModel.handleIntent(HomeIntent.DeleteReminder(effect.reminder))
+                    }
+                }
+            }
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { HomeTopBar() },
         bottomBar = {
             QuickAddReminderBar(

@@ -3,6 +3,7 @@ package com.nadhifhayazee.simplereminder.ui.screen.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nadhifhayazee.simplereminder.domain.model.Reminder
+import com.nadhifhayazee.simplereminder.domain.model.ReminderDefaults
 import com.nadhifhayazee.simplereminder.domain.model.ReminderStatus
 import com.nadhifhayazee.simplereminder.domain.usecase.AddReminderUseCase
 import com.nadhifhayazee.simplereminder.domain.usecase.DeleteReminderUseCase
@@ -39,6 +40,8 @@ class HomeViewModel @Inject constructor(
             is HomeIntent.LoadReminders -> loadReminders()
             is HomeIntent.AddReminder -> addReminder(intent.name)
             is HomeIntent.UpdateReminder -> updateReminder(intent.reminder)
+            is HomeIntent.DeleteReminder -> deleteReminder(intent.reminder)
+            is HomeIntent.UndoDelete -> undoDelete(intent.reminder)
         }
     }
 
@@ -70,13 +73,14 @@ class HomeViewModel @Inject constructor(
     private fun addReminder(name: String) {
         viewModelScope.launch {
             try {
-                val deadline = System.currentTimeMillis() + 60 * 60 * 1000 // 1 hour from now
+                val deadline = System.currentTimeMillis() + ReminderDefaults.DEFAULT_DEADLINE_OFFSET_MS
                 val reminder = Reminder(
                     name = name,
                     deadline = deadline,
                     status = ReminderStatus.TODO
                 )
                 addReminderUseCase(reminder)
+                _effect.emit(HomeEffect.ShowSuccess("Reminder added"))
             } catch (e: Exception) {
                 _effect.emit(HomeEffect.ShowError(e.message ?: "Failed to add reminder"))
             }
@@ -87,12 +91,33 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (reminder.status == ReminderStatus.DONE) {
-                    deleteReminderUseCase(reminder)
+                    _effect.emit(HomeEffect.ShowUndoDelete(reminder))
                 } else {
                     updateReminderUseCase(reminder)
                 }
             } catch (e: Exception) {
                 _effect.emit(HomeEffect.ShowError(e.message ?: "Failed to update reminder"))
+            }
+        }
+    }
+
+    private fun deleteReminder(reminder: Reminder) {
+        viewModelScope.launch {
+            try {
+                deleteReminderUseCase(reminder)
+            } catch (e: Exception) {
+                _effect.emit(HomeEffect.ShowError(e.message ?: "Failed to delete reminder"))
+            }
+        }
+    }
+
+    private fun undoDelete(reminder: Reminder) {
+        viewModelScope.launch {
+            try {
+                val restoredReminder = reminder.copy(status = ReminderStatus.TODO)
+                updateReminderUseCase(restoredReminder)
+            } catch (e: Exception) {
+                _effect.emit(HomeEffect.ShowError(e.message ?: "Failed to restore reminder"))
             }
         }
     }
