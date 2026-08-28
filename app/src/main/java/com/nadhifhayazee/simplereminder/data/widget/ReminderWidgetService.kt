@@ -108,68 +108,77 @@ class ReminderRemoteViewsFactory(
     override fun getCount(): Int = widgetItems.size
 
     override fun getViewAt(position: Int): RemoteViews {
-        val item = widgetItems.getOrNull(position) ?: return RemoteViews(context.packageName, R.layout.reminder_widget_item)
+        return try {
+            val item = widgetItems.getOrNull(position) ?: return RemoteViews(context.packageName, R.layout.reminder_widget_item)
 
-        return when (item) {
-            is WidgetListItem.Header -> {
-                val views = RemoteViews(context.packageName, R.layout.reminder_widget_header)
-                views.setTextViewText(R.id.header_title, item.title)
-                views
-            }
-            is WidgetListItem.ReminderItem -> {
-                val reminder = item.reminder
-                val views = RemoteViews(context.packageName, R.layout.reminder_widget_item)
-                
-                views.setTextViewText(R.id.reminder_name, reminder.name)
-                
-                val isRecurring = reminder.repeatInterval != RepeatInterval.NONE
-                val formatPattern = if (isRecurring) "HH:mm" else "MMM dd, HH:mm"
-                val timeStr = SimpleDateFormat(formatPattern, Locale.getDefault()).format(Date(reminder.deadline))
-                
-                val remainingDaysInfo = if (isRecurring) {
-                    val nowCal = Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }
-                    val deadlineDate = Calendar.getInstance().apply {
-                        timeInMillis = reminder.deadline
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }
-
-                    val diffMillis = deadlineDate.timeInMillis - nowCal.timeInMillis
-                    val diffDays = (diffMillis / (24 * 60 * 60 * 1000)).toInt()
-                    
-                    when {
-                        diffDays == 0 -> "Today"
-                        diffDays == 1 -> "Tomorrow"
-                        diffDays > 1 -> "In $diffDays days"
-                        else -> null
-                    }
-                } else null
-
-                val deadlineDisplayText = if (remainingDaysInfo != null) "$remainingDaysInfo, $timeStr" else timeStr
-                views.setTextViewText(R.id.reminder_deadline, deadlineDisplayText)
-
-                val indicatorRes = when (reminder.status) {
-                    ReminderStatus.TODO -> R.drawable.widget_indicator_blue
-                    ReminderStatus.IN_PROGRESS -> R.drawable.widget_indicator_yellow
-                    ReminderStatus.DONE -> R.drawable.widget_indicator_green
+            when (item) {
+                is WidgetListItem.Header -> {
+                    val views = RemoteViews(context.packageName, R.layout.reminder_widget_header)
+                    views.setTextViewText(R.id.header_title, item.title)
+                    views
                 }
-                views.setImageViewResource(R.id.status_indicator, indicatorRes)
-                
-                views.setViewVisibility(R.id.repeat_icon, if (isRecurring) View.VISIBLE else View.GONE)
+                is WidgetListItem.ReminderItem -> {
+                    val reminder = item.reminder
+                    val views = RemoteViews(context.packageName, R.layout.reminder_widget_item)
 
-                val fillInIntent = Intent().apply {
-                    putExtra("reminderId", reminder.id)
+                    views.setTextViewText(R.id.reminder_name, reminder.name)
+
+                    val isRecurring = reminder.repeatInterval != RepeatInterval.NONE
+                    val formatPattern = if (isRecurring) "HH:mm" else "MMM dd, HH:mm"
+                    val timeStr = SimpleDateFormat(formatPattern, Locale.getDefault()).format(Date(reminder.deadline))
+
+                    val remainingDaysInfo = if (isRecurring) {
+                        val nowCal = Calendar.getInstance().apply {
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        val deadlineDate = Calendar.getInstance().apply {
+                            timeInMillis = reminder.deadline
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+
+                        val diffMillis = deadlineDate.timeInMillis - nowCal.timeInMillis
+                        val diffDays = (diffMillis / (24 * 60 * 60 * 1000)).toInt()
+
+                        when {
+                            diffDays == 0 -> "Today"
+                            diffDays == 1 -> "Tomorrow"
+                            diffDays > 1 -> "In $diffDays days"
+                            else -> null
+                        }
+                    } else null
+
+                    val deadlineDisplayText = if (remainingDaysInfo != null) "$remainingDaysInfo, $timeStr" else timeStr
+                    views.setTextViewText(R.id.reminder_deadline, deadlineDisplayText)
+
+                    val isOverdue = reminder.deadline < System.currentTimeMillis()
+
+                    val indicatorRes = if (isOverdue) {
+                        R.drawable.widget_indicator_red
+                    } else when (reminder.status) {
+                        ReminderStatus.TODO -> R.drawable.widget_indicator_blue
+                        ReminderStatus.IN_PROGRESS -> R.drawable.widget_indicator_yellow
+                        ReminderStatus.DONE -> R.drawable.widget_indicator_green
+                    }
+                    views.setImageViewResource(R.id.status_indicator, indicatorRes)
+
+                    views.setViewVisibility(R.id.repeat_icon, if (isRecurring) View.VISIBLE else View.GONE)
+
+                    val fillInIntent = Intent().apply {
+                        putExtra("reminderId", reminder.id)
+                    }
+                    views.setOnClickFillInIntent(R.id.reminder_item_layout, fillInIntent)
+                    views
                 }
-                views.setOnClickFillInIntent(R.id.reminder_item_layout, fillInIntent)
-                views
             }
+        } catch (e: Exception) {
+            Log.e("Widget", "Error in getViewAt($position)", e)
+            RemoteViews(context.packageName, R.layout.reminder_widget_item)
         }
     }
 

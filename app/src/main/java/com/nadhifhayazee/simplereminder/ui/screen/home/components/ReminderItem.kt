@@ -83,7 +83,7 @@ fun ReminderItem(
                     stiffness = Spring.StiffnessLow
                 )
             ),
-        color = MaterialTheme.colorScheme.surface,
+        color = if (isOverdue) MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
         shape = RoundedCornerShape(20.dp)
     ) {
@@ -93,6 +93,16 @@ fun ReminderItem(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (isOverdue) {
+                Box(
+                    modifier = Modifier
+                        .width(3.dp)
+                        .height(28.dp)
+                        .background(MaterialTheme.colorScheme.tertiary, shape = RoundedCornerShape(1.5.dp))
+                )
+                Spacer(modifier = Modifier.width(Spacing.sm))
+            }
+
             StatusIndicator(
                 status = reminder.status,
                 onStatusClick = { showMenu = true }
@@ -117,21 +127,6 @@ fun ReminderItem(
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                         )
-                    }
-                    if (isOverdue) {
-                        Spacer(modifier = Modifier.width(Spacing.xs))
-                        Surface(
-                            color = MaterialTheme.colorScheme.error,
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                text = "OVERDUE",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onError,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
                     }
                 }
 
